@@ -11,6 +11,7 @@
   <nav class="sidebar">
       <button class="nav-button active" data-section="server-section">Server</button>
       <button class="nav-button" data-section="properties-section">Properties</button>
+      <button class="nav-button" data-section="players-section">Players</button>
       <button class="nav-button" data-section="folder-section">Folder</button>
   </nav>
 
@@ -40,12 +41,50 @@
           </div>
       </div>
 
+      <div class="content-section" id="players-section">
+        <div class="server-section">
+            <h2>Player Management</h2>
+            <div class="player-categories">
+                <div class="player-card" data-type="whitelist">
+                    <h3>Whitelist</h3>
+                    <p>Manage allowed players</p>
+                </div>
+                <div class="player-card" data-type="ops">
+                    <h3>OPs</h3>
+                    <p>Manage server operators</p>
+                </div>
+                <div class="player-card" data-type="banned-players">
+                    <h3>Banned Players</h3>
+                    <p>Manage player bans</p>
+                </div>
+                <div class="player-card" data-type="banned-ips">
+                    <h3>Banned IPs</h3>
+                    <p>Manage IP bans</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
       <!-- Folder Section -->
       <div class="content-section" id="folder-section">
           <p>Server files browser coming soon!</p>
           <!-- Add file browser/upload functionality later -->
       </div>
   </main>
+  <div id="playerModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3 id="modalTitle"></h3>
+        <form id="playerForm">
+            <input type="text" id="username" name="username" 
+                   placeholder="Enter username/IP" required>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel">Cancel</button>
+                <button type="submit" class="btn btn-confirm">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
     <script>
       document.querySelectorAll('.nav-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -59,6 +98,78 @@
               section.classList.add('active');
           });
       });
+
+      document.querySelectorAll('.player-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const type = card.dataset.type;
+            openPlayerModal(type);
+        });
+    });
+
+    function openPlayerModal(type) {
+        const modal = document.getElementById('playerModal');
+        const title = document.getElementById('modalTitle');
+        const form = document.getElementById('playerForm');
+        
+        // Set modal title based on type
+        const titles = {
+            'whitelist': 'Add to Whitelist',
+            'ops': 'Grant Operator Status',
+            'banned-players': 'Ban Player',
+            'banned-ips': 'Ban IP Address'
+        };
+        title.textContent = titles[type];
+
+        // Clear previous form data
+        form.reset();
+        
+        // Show modal
+        modal.style.display = 'block';
+
+        // Handle form submission
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            
+            try {
+                const endpoint = {
+                    'whitelist': 'whitelist',
+                    'ops': 'ops',
+                    'banned-players': 'ban',
+                    'banned-ips': 'ban-ip'
+                }[type];
+
+                const response = await fetch(`/api/servers/${serverId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: username })
+                });
+
+                if (!response.ok) throw new Error('Operation failed');
+                
+                showSuccess('Operation completed successfully!');
+                modal.style.display = 'none';
+            } catch (err) {
+                showError(err.message);
+            }
+        };
+    }
+
+    // Close modal handlers
+    document.querySelector('.close').addEventListener('click', () => {
+        document.getElementById('playerModal').style.display = 'none';
+    });
+
+    document.querySelector('.btn-cancel').addEventListener('click', () => {
+        document.getElementById('playerModal').style.display = 'none';
+    });
+
+    window.onclick = (event) => {
+        const modal = document.getElementById('playerModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
 
       const serverId = new URLSearchParams(window.location.search).get('id');
       const consoleElement = document.getElementById('console');

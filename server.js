@@ -6,6 +6,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const { spawn } = require('child_process');
 const WebSocket = require('ws');
+const axios = require('axios');
 
 const app = express();
 const port = 3000;
@@ -127,6 +128,61 @@ async function copyTemplate(serverPath, serverName, serverPort) {
       .replace(/server-port=.*/, `server-port=${serverPort}`));
   await fs.writeFile(propertiesPath, properties);
 }
+
+async function getMojangUUID(username) {
+  try {
+      const response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+      return {
+          uuid: formatUUID(response.data.id),
+          username: response.data.name
+      };
+  } catch (error) {
+      throw new Error('Invalid username or Mojang API error');
+  }
+}
+
+function formatUUID(rawUUID) {
+  return rawUUID.replace(
+      /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/,
+      '$1-$2-$3-$4-$5'
+  );
+}
+
+async function resolveUUID(username) {
+  // Fetch from Mojang API
+  const mojangData = await getMojangUUID(username);
+  
+  // Update cache
+  await new Promise(resolve => 
+      db.run('INSERT OR REPLACE INTO uuid_cache (username, uuid) VALUES (?, ?)', 
+      [mojangData.username, mojangData.uuid], 
+      resolve))
+  
+  return mojangData.uuid;
+}
+
+app.post('/api/servers/:id/ops', async (req, res) => {
+  try {
+      const { value: username } = req.body;
+      const uuid = await resolveUUID(username);
+      const server = await getServerById(req.params.id);
+      
+      const opsPath = path.join(server.path, 'ops.json');
+      const ops = await fs.readJson(opsPath).catch(() => []);
+      
+      const newOp = {
+          uuid: uuid,
+          name: username,
+          level: 4,
+          bypassesPlayerLimit: false
+      };
+      
+      await fs.writeJson(opsPath, [...ops, newOp]);
+      res.json({ success: true });
+  } catch (err) {
+      res.status(400).json({ error: err.message });
+  }
+});
 
 // API Endpoints
 app.get('/api/servers', (req, res) => {
@@ -255,6 +311,107 @@ app.post('/api/servers/:id/properties', express.text(), async (req, res) => { //
     res.status(500).json({ error: err.message });
   }
 });
+
+app.post('/api/servers/:id/whitelist', async (req, res) => {
+  try {
+      const { value: username } = req.body;
+      const server = await getServerById(req.params.id);
+      
+      const whitelistPath = path.join(server.path, 'whitelist.json');
+      const whitelist = await fs.readJson(whitelistPath).catch(() => []);
+      
+      // Add new entry
+      const newEntry = {
+          uuid: uuidv4(), // Note: Should use real UUID from Mojang API in production
+          name: username
+      };
+      
+      await fs.writeJson(whitelistPath, [...whitelist, newEntry]);
+      res.json({ success: true });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/servers/:id/ops', async (req, res) => {
+  try {
+      const { value: username } = req.body;
+      const server = await getServerById(req.params.id);
+      
+      const opsPath = path.join(server.path, 'ops.json');
+      const ops = await fs.readJson(opsPath).catch(() => []);
+      
+      const newOp = {
+          uuid: uuidv4(), // Placeholder - should get real UUID
+          name: username,
+          level: 4,
+          bypassesPlayerLimit: false
+      };
+      
+      await fs.writeJson(opsPath, [...ops, newOp]);
+      res.json({ success: true });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/servers/:id/ban', async (req, res) => {
+  try {
+      const { value: username } = req.body;
+      const server = await getServerById(req.params.id);
+      
+      const bansPath = path.join(server.path, 'banned-players.json');
+      const bans = await fs.readJson(bansPath).catch(() => []);
+      
+      const newBan = {
+          uuid: uuidv4(), // Placeholder
+          name: username,
+          created: new Date().toISOString(),
+          source: "Server",
+          expires: "forever",
+          reason: "Banned by operator"
+      };
+      
+      await fs.writeJson(bansPath, [...bans, newBan]);
+      res.json({ success: true });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/servers/:id/ban-ip', async (req, res) => {
+  try {
+      const { value: ip } = req.body;
+      const server = await getServerById(req.params.id);
+      
+      const ipBansPath = path.join(server.path, 'banned-ips.json');
+      const ipBans = await fs.readJson(ipBansPath).catch(() => []);
+      
+      const newIpBan = {
+          ip: ip,
+          created: new Date().toISOString(),
+          source: "Server",
+          expires: "forever",
+          reason: "Banned by operator"
+      };
+      
+      await fs.writeJson(ipBansPath, [...ipBans, newIpBan]);
+      res.json({ success: true });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
+// Add helper function at top with other helpers
+async function getServerById(serverId) {
+  return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM servers WHERE id = ?', [serverId], (err, row) => {
+          if (err) reject(err);
+          if (!row) reject(new Error('Server not found'));
+          resolve(row);
+      });
+  });
+}
 
 // WebSocket setup
 const server = app.listen(port, '0.0.0.0', () => {

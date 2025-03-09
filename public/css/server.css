@@ -206,3 +206,72 @@ body {
 #console {
     margin-top: 1rem;
 }
+
+.player-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.player-card {
+    background-color: var(--surface);
+    padding: 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.player-card:hover {
+    transform: translateY(-3px);
+    background-color: var(--surface-hover);
+}
+
+.player-card h3 {
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--background);
+    margin: 15% auto;
+    padding: 2rem;
+    width: 400px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    background-color: #666;
+}
+
+.btn-confirm {
+    background-color: var(--primary);
+}
