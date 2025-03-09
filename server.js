@@ -161,6 +161,34 @@ async function resolveUUID(username) {
   return mojangData.uuid;
 }
 
+// GET existing OPs
+app.get('/api/servers/:id/ops', async (req, res) => {
+  try {
+      const server = await getServerById(req.params.id);
+      const opsPath = path.join(server.path, 'ops.json');
+      const ops = await fs.readJson(opsPath).catch(() => []);
+      res.json(ops);
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE OP
+app.delete('/api/servers/:id/ops/:uuid', async (req, res) => {
+  try {
+      const server = await getServerById(req.params.id);
+      const opsPath = path.join(server.path, 'ops.json');
+      const ops = await fs.readJson(opsPath).catch(() => []);
+      
+      const filtered = ops.filter(op => op.uuid !== req.params.uuid);
+      await fs.writeJson(opsPath, filtered);
+      
+      res.json({ success: true });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/servers/:id/ops', async (req, res) => {
   try {
       const { value: username } = req.body;

@@ -275,3 +275,80 @@ body {
 .btn-confirm {
     background-color: var(--primary);
 }
+
+.management-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.btn-add {
+    background-color: var(--primary);
+    padding: 0.5rem 1rem;
+}
+
+.entries-container {
+    background-color: var(--surface);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.player-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    background-color: var(--background);
+    border-radius: 6px;
+}
+
+.player-form-view {
+    background-color: var(--surface);
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.ops-list {
+    background-color: var(--surface);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.op-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    background-color: var(--background);
+    border-radius: 6px;
+}
+
+.op-entry span {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}

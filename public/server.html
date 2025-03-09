@@ -11,7 +11,7 @@
   <nav class="sidebar">
       <button class="nav-button active" data-section="server-section">Server</button>
       <button class="nav-button" data-section="properties-section">Properties</button>
-      <button class="nav-button" data-section="players-section">Players</button>
+      <button class="nav-button" data-section="players-section" onclick="loadOPs()">Players</button>
       <button class="nav-button" data-section="folder-section">Folder</button>
   </nav>
 
@@ -42,27 +42,32 @@
       </div>
 
       <div class="content-section" id="players-section">
-        <div class="server-section">
-            <h2>Player Management</h2>
-            <div class="player-categories">
-                <div class="player-card" data-type="whitelist">
-                    <h3>Whitelist</h3>
-                    <p>Manage allowed players</p>
+        <div class="management-container">
+            <div class="player-list-view">
+                <div class="list-header">
+                    <h2>OPs</h2>
+                    <button class="btn btn-add" onclick="showAddForm()">+ Add</button>
                 </div>
-                <div class="player-card" data-type="ops">
-                    <h3>OPs</h3>
-                    <p>Manage server operators</p>
-                </div>
-                <div class="player-card" data-type="banned-players">
-                    <h3>Banned Players</h3>
-                    <p>Manage player bans</p>
-                </div>
-                <div class="player-card" data-type="banned-ips">
-                    <h3>Banned IPs</h3>
-                    <p>Manage IP bans</p>
+                
+                <!-- OPs List -->
+                <div class="ops-list" id="opsList">
+                    <!-- Entries will be dynamically added here -->
                 </div>
             </div>
+    
+            <!-- Add OP Form -->
+            <div class="player-form-view" id="opForm" style="display: none;">
+                <h3>Add Operator</h3>
+                <form id="addOpForm" onsubmit="handleOpSubmit(event)">
+                    <input type="text" id="opUsername" required placeholder="Enter username">
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-cancel" onclick="cancelAddForm()">Cancel</button>
+                        <button type="submit" class="btn btn-confirm" onclick="cancelAddForm()">Save</button>
+                    </div>
+                </form>
+            </div>
         </div>
+      </div>
     </div>
 
       <!-- Folder Section -->
@@ -86,6 +91,38 @@
     </div>
 </div>
     <script>
+      let opsRefreshInterval = null;
+      document.querySelectorAll('.nav-button').forEach(button => {
+    button.addEventListener('click', function() {
+        // Clear existing interval
+        if (opsRefreshInterval) {
+            clearInterval(opsRefreshInterval);
+            opsRefreshInterval = null;
+        }
+
+        // Remove active classes
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        
+        // Add active classes
+        this.classList.add('active');
+        const section = document.getElementById(this.dataset.section);
+        section.classList.add('active');
+
+        // Start refresh if players section
+        if (this.dataset.section === 'players-section') {
+            loadOPs(); // Load immediately
+            opsRefreshInterval = setInterval(loadOPs, 500); // Refresh every second
+        }
+    });
+});
+
+// Add cleanup when leaving the page
+window.addEventListener('beforeunload', () => {
+    if (opsRefreshInterval) {
+        clearInterval(opsRefreshInterval);
+    }
+});
       document.querySelectorAll('.nav-button').forEach(button => {
             button.addEventListener('click', function() {
               // Remove active classes
@@ -99,10 +136,86 @@
           });
       });
 
-      document.querySelectorAll('.player-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const type = card.dataset.type;
-            openPlayerModal(type);
+      async function loadOPs() {
+        try {
+            const response = await fetch(`/api/servers/${serverId}/ops`);
+            const ops = await response.json();
+            renderOPs(ops);
+        } catch (err) {
+          
+        }
+    }
+
+    function renderOPs(ops) {
+        const opsList = document.getElementById('opsList');
+        opsList.innerHTML = ops.length > 0 
+            ? ops.map(op => `
+                <div class="op-entry">
+                    <span>${op.name}</span>
+                    <button class="btn btn-danger" onclick="removeOP('${op.uuid}')">Remove</button>
+                </div>
+            `).join('')
+            : `<p class="no-ops">No operators added yet</p>`;
+    }
+
+    function showAddForm() {
+        document.getElementById('opForm').style.display = 'block';
+        document.getElementById('addOpForm').reset();
+    }
+
+    function cancelAddForm() {
+        document.getElementById('opForm').style.display = 'none';
+    }
+
+    async function handleOpSubmit(e) {
+        e.preventDefault();
+        const username = document.getElementById('opUsername').value;
+        
+        try {
+            const response = await fetch(`/api/servers/${serverId}/ops`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: username })
+            });
+            
+            if (!response.ok) throw new Error('Failed to add OP');
+            
+            showSuccess('Operator added successfully');
+            cancelAddForm();
+            await loadOPs();
+        } catch (err) {
+            showError(err.message);
+        }
+    }
+
+    async function removeOP(uuid) {
+        if (!confirm('Are you sure you want to remove this operator?')) return;
+        
+        try {
+            const response = await fetch(`/api/servers/${serverId}/ops/${uuid}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) throw new Error('Failed to remove OP');
+            
+            showSuccess('Operator removed successfully');
+            await loadOPs();
+        } catch (err) {
+            showError(err.message);
+        }
+    }
+
+    // Load OPs when the section is shown
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash === '#players-section') {
+            loadOPs();
+        }
+    });
+
+    document.querySelectorAll('.player-card').forEach(card => {
+      card.addEventListener('click', () => {
+          const type = card.dataset.type;
+          openPlayerModal(type);
         });
     });
 
