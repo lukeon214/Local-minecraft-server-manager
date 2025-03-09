@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Server Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #console {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      height: 60vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    .controls { margin: 20px 0; }
+    button { padding: 10px 20px; margin-right: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1 id="serverName"></h1>
+  <div class="controls">
+    <button id="startStopBtn">Start</button>
+    <button id="deleteBtn">Delete Server</button>
+    <button onclick="window.location.href='/'">Back to List</button>
+  </div>
+  <div id="console"></div>
+
+  <script>
+    const serverId = new URLSearchParams(window.location.search).get('id');
+    const consoleElement = document.getElementById('console');
+    const ws = new WebSocket(`ws://${window.location.host}?serverId=${serverId}`);
+
+    // WebSocket handling
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'history') {
+        consoleElement.textContent = message.data.join('');
+      } else if (message.type === 'output') {
+        consoleElement.textContent += message.data;
+      }
+      consoleElement.scrollTop = consoleElement.scrollHeight;
+    };
+
+    // Load server details
+    fetch(`/api/servers/${serverId}`)
+      .then(response => response.json())
+      .then(server => {
+        document.title = `Managing ${server.name}`;
+        document.getElementById('serverName').textContent = server.name;
+        updateButtonState(server.status);
+      });
+
+    // Control buttons
+    document.getElementById('startStopBtn').addEventListener('click', () => {
+      const action = document.getElementById('startStopBtn').textContent.toLowerCase();
+      fetch(`/api/servers/${serverId}/${action}`, { method: 'POST' })
+        .then(() => setTimeout(() => window.location.reload(), 1000));
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete this server?')) {
+        fetch(`/api/servers/${serverId}`, { method: 'DELETE' })
+          .then(() => window.location.href = '/');
+      }
+    });
+
+    function updateButtonState(status) {
+      const btn = document.getElementById('startStopBtn');
+      btn.textContent = status === 'running' ? 'Stop' : 'Start';
+      btn.style.backgroundColor = status === 'running' ? '#dc3545' : '#28a745';
+    }
+  </script>
+</body>
+</html>

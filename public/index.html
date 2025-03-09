@@ -3,16 +3,60 @@
 <head>
   <title>Minecraft Server Manager</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-    .server { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
-    input, button { margin: 5px; padding: 8px; }
-    .controls { margin-top: 10px; }
-    .start-btn { background: #28a745; color: white; border: none; cursor: pointer; }
-    .stop-btn { background: #ffc107; color: black; border: none; cursor: pointer; margin: 0 5px; }
-    .delete-btn { background: #dc3545; color: white; border: none; cursor: pointer; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    #error { color: red; margin: 10px 0; }
-    #success { color: green; margin: 10px 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      max-width: 800px; 
+      margin: 0 auto; 
+    }
+    
+    .server {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .server:hover {
+      background-color: #f5f5f5;
+    }
+    
+    input, button { 
+      margin: 5px; 
+      padding: 8px; 
+    }
+    
+    button { 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+    }
+    
+    #error { 
+      color: red; 
+      margin: 10px 0; 
+    }
+    
+    #success { 
+      color: green; 
+      margin: 10px 0; 
+    }
+    
+    .status {
+      font-weight: bold;
+      color: #666;
+    }
+    
+    .status.running {
+      color: #28a745;
+    }
+    
+    .status.stopped {
+      color: #dc3545;
+    }
   </style>
 </head>
 <body>
@@ -26,7 +70,7 @@
   <form id="createForm">
     <input type="text" name="name" placeholder="Server Name" required>
     <input type="number" name="port" placeholder="Port" value="25565" required>
-    <button type="submit" class="create-btn">Create Server</button>
+    <button type="submit">Create Server</button>
   </form>
 
   <script>
@@ -38,57 +82,15 @@
         
         document.getElementById('serverList').innerHTML = servers
           .map(server => `
-            <div class="server">
+            <div class="server" onclick="window.location.href='/server.html?id=${server.id}'">
               <h3>${server.name}</h3>
               <p>Folder: ${server.folder_name}</p>
               <p>Port: ${server.port}</p>
-              <p>Status: <span class="status">${server.status}</span></p>
-              <div class="controls">
-                <button class="start-btn" 
-                  onclick="controlServer('${server.id}', 'start')"
-                  ${server.status === 'running' ? 'disabled' : ''}>
-                  Start
-                </button>
-                <button class="stop-btn" 
-                  onclick="controlServer('${server.id}', 'stop')"
-                  ${server.status !== 'running' ? 'disabled' : ''}>
-                  Stop
-                </button>
-                <button class="delete-btn" onclick="deleteServer('${server.id}')">
-                  Delete
-                </button>
-              </div>
+              <p>Status: <span class="status ${server.status}">${server.status}</span></p>
             </div>
           `).join('');
       } catch (err) {
         showError(err.message);
-      }
-    }
-
-    async function controlServer(serverId, action) {
-      try {
-        const response = await fetch(`/api/servers/${serverId}/${action}`, {
-          method: 'POST'
-        });
-        
-        if (!response.ok) throw new Error(`Failed to ${action} server`);
-        
-        showSuccess(`Server ${action} command sent`);
-        setTimeout(refreshServers, 2000);
-      } catch (err) {
-        showError(err.message);
-      }
-    }
-
-    async function deleteServer(serverId) {
-      if (confirm('Are you sure you want to delete this server?')) {
-        try {
-          await fetch(`/api/servers/${serverId}`, { method: 'DELETE' });
-          showSuccess('Server deleted successfully');
-          refreshServers();
-        } catch (err) {
-          showError(err.message);
-        }
       }
     }
 
