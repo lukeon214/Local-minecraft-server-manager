@@ -1,0 +1,13 @@
+{
+  "name": "mc-web-control",
+  "version": "1.0.0",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "decompress": "^4.2.1",
+    "express": "^4.21.2",
+    "fs-extra": "^11.3.0",
+    "node-fetch": "^2.6.7",
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.1"
+  }
+}
