@@ -1,0 +1,126 @@
+:root {
+    --primary: #4CAF50;
+    --background: #1a1a1a;
+    --surface: #2d2d2d;
+    --surface-hover: #383838;
+    --text: #ffffff;
+    --text-secondary: #cccccc;
+    --error: #f44336;
+    --success: #4CAF50;
+}
+
+body { 
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+h1, h2, h3 {
+    color: var(--primary);
+    margin: 1.5rem 0;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.4rem; }
+
+.server {
+    background-color: var(--surface);
+    border: 1px solid #3d3d3d;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    transition: transform 0.2s, background-color 0.2s;
+    cursor: pointer;
+}
+
+.server:hover {
+    background-color: var(--surface-hover);
+    transform: translateY(-2px);
+}
+
+.status {
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.status.running {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: var(--success);
+}
+
+.status.stopped {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: var(--error);
+}
+
+form {
+    background-color: var(--surface);
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+input, button {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    transition: all 0.2s;
+}
+
+input {
+    background-color: #3d3d3d;
+    color: var(--text);
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #4d4d4d;
+}
+
+input:focus {
+    outline: 2px solid var(--primary);
+    background-color: #454545;
+}
+
+button {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 500;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+#error, #success {
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    display: none;
+}
+
+#error {
+    background-color: rgba(244, 67, 54, 0.2);
+    border: 1px solid var(--error);
+}
+
+#success {
+    background-color: rgba(76, 175, 80, 0.2);
+    border: 1px solid var(--success);
+}

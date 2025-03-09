@@ -1,0 +1,135 @@
+:root {
+    --primary: #4CAF50;
+    --background: #1a1a1a;
+    --surface: #2d2d2d;
+    --surface-hover: #383838;
+    --text: #ffffff;
+    --text-secondary: #cccccc;
+    --error: #f44336;
+    --success: #4CAF50;
+    --console-bg: #1e1e1e;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    margin: 0;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: var(--primary);
+    margin: 0 0 2rem 0;
+    font-size: 2.2rem;
+}
+
+h3 {
+    color: var(--text-secondary);
+    margin: 2rem 0 1rem;
+    font-size: 1.3rem;
+}
+
+.controls {
+    margin: 2rem 0;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+button {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+#startStopBtn {
+    background-color: var(--primary);
+    color: white;
+}
+
+#startStopBtn.stopped {
+    background-color: var(--primary);
+}
+
+#startStopBtn.running {
+    background-color: var(--error);
+}
+
+#deleteBtn {
+    background-color: var(--error);
+    color: white;
+}
+
+#console {
+    background-color: var(--console-bg);
+    color: #d4d4d4;
+    padding: 1.5rem;
+    height: 60vh;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border: 1px solid #3d3d3d;
+    margin: 1rem 0;
+}
+
+#properties-editor {
+    margin: 2rem 0;
+    background-color: var(--surface);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+#properties-content {
+    width: 97%;
+    height: 400px;
+    background-color: var(--console-bg);
+    color: #e0e0e0;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    white-space: pre;
+    tab-size: 4;
+}
+
+.btn {
+    background-color: var(--primary);
+    color: white;
+    margin: 0.5rem 0.5rem 0.5rem 0;
+}
+
+.btn-danger {
+    background-color: var(--error);
+}
+
+.btn:hover {
+    filter: brightness(1.1);
+}
+
+.server-section {
+    margin-top: 2rem;
+    border-top: 2px solid #3d3d3d;
+    padding-top: 2rem;
+}
