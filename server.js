@@ -222,9 +222,43 @@ app.get('/api/servers/:id', (req, res) => {
   });
 });
 
+app.get('/api/servers/:id/properties', async (req, res) => {
+  try {
+    const server = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM servers WHERE id = ?', [req.params.id], (err, row) => 
+        err ? reject(err) : resolve(row))
+    });
+    
+    if (!server) return res.status(404).send('Server not found');
+    
+    const propertiesPath = path.join(server.path, 'server.properties');
+    const content = await fs.readFile(propertiesPath, 'utf8');
+    res.send(content);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/servers/:id/properties', express.text(), async (req, res) => { // Add express.text() middleware
+  try {
+    const server = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM servers WHERE id = ?', [req.params.id], (err, row) => 
+        err ? reject(err) : resolve(row))
+    });
+    
+    if (!server) return res.status(404).json({ error: 'Server not found' });
+    
+    const propertiesPath = path.join(server.path, 'server.properties');
+    await fs.writeFile(propertiesPath, req.body); // Use req.body directly
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // WebSocket setup
 const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
 
 server.on('upgrade', (request, socket, head) => {
