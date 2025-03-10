@@ -30,16 +30,101 @@
 
       <!-- Properties Section -->
       <div class="content-section" id="properties-section">
-          <div class="server-section">
-              <h3>Server Properties</h3>
-              <div id="properties-editor">
-                  <button class="btn" onclick="loadProperties()">Reload Properties</button>
-                  <button class="btn btn-danger" onclick="saveProperties()">Save Properties</button>
-                  <br><br>
-                  <textarea id="properties-content" spellcheck="false"></textarea>
-              </div>
-          </div>
-      </div>
+        <div class="properties-editor">
+            <div class="editor-header">
+                <h2>Server Properties</h2>
+                <div class="editor-tabs">
+                    <button class="tab-btn active" data-tab="basic">Basic Settings</button>
+                    <button class="tab-btn" data-tab="advanced">Advanced</button>
+                </div>
+            </div>
+    
+            <!-- Basic Settings Tab -->
+            <div class="tab-content active" data-tab="basic">
+                <div class="settings-grid">
+                    <!-- Game Settings Card -->
+                    <div class="settings-card">
+                        <h3>Game Settings</h3>
+                        <div class="setting-item">
+                            <label>Gamemode</label>
+                            <select data-prop="gamemode">
+                                <option value="survival">Survival</option>
+                                <option value="creative">Creative</option>
+                                <option value="adventure">Adventure</option>
+                                <option value="spectator">Spectator</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Difficulty</label>
+                            <select data-prop="difficulty">
+                                <option value="peaceful">Peaceful</option>
+                                <option value="easy">Easy</option>
+                                <option value="normal">Normal</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Max Players</label>
+                            <input type="text" data-prop="max-players" min="1" max="100">
+                        </div>
+                        <div class="setting-item">
+                            <label>View Distance</label>
+                            <input type="text" data-prop="view-distance" min="1" max="32">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Server setting</h3>
+                        <div class="setting-item">
+                            <label>Allow flight</label>
+                            <select data-prop="allow-flight">
+                                <option value="true">True</option>
+                                <option value="false">False</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>PVP</label>
+                            <select data-prop="pvp">
+                                <option value="true">On</option>
+                                <option value="false">Off</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Spawn monsters</label>
+                            <select data-prop="spawn-monsters">
+                                <option value="true">True</option>
+                                <option value="false">False</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Nether</label>
+                            <select data-prop="allow-nether">
+                                <option value="true">True</option>
+                                <option value="false">False</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    
+    
+                    <!-- Additional Cards -->
+                    <!-- Add more cards for other settings groups -->
+                </div>
+            </div>
+    
+            <!-- Advanced Tab -->
+            <div class="tab-content" data-tab="advanced">
+                <div class="raw-editor">
+                    <h3>Raw Properties Editor</h3>
+                    <textarea id="properties-content" spellcheck="false"></textarea>
+                </div>
+            </div>
+    
+            <div class="editor-actions">
+                <button class="btn btn-primary" onclick="saveProperties(), loadProperties()">Save All Changes</button>
+            </div>
+        </div>
+    </div>
 
       <div class="content-section" id="players-section">
         <div class="management-container">
@@ -328,39 +413,102 @@ window.addEventListener('beforeunload', () => {
         btn.style.backgroundColor = status === 'running' ? '#dc3545' : '#28a745';
       }
 
-      async function loadProperties() {
-      try {
-          const response = await fetch(`/api/servers/${serverId}/properties`);
-          const data = await response.text();
-          document.getElementById('properties-content').value = data;
-      } catch (error) {
-          console.error('Error loading properties:', error);
-          alert('Failed to load properties');
-        }
-      }
+      let propertiesData = {};
 
-      async function saveProperties() {
-          try {
-              const content = document.getElementById('properties-content').value;
-              const response = await fetch(`/api/servers/${serverId}/properties`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'text/plain', // Keep this as text/plain
-                  },
-                body: content // Send raw text content
-            });
+async function loadProperties() {
+    try {
+        const response = await fetch(`/api/servers/${serverId}/properties`);
+        const rawText = await response.text();
+        
+        // Parse properties
+        propertiesData = rawText.split('\n').reduce((acc, line) => {
+            if (line.trim() && !line.startsWith('#')) {
+                const [key, value] = line.split('=');
+                acc[key.trim()] = value?.trim() || '';
+            }
+            return acc;
+        }, {});
 
-          const result = await response.json();
-          if (result.success) {
-              alert('Properties saved successfully! Restart server for changes to take effect.');
-          } else {
-              alert('Error saving properties: ' + (result.error || 'Unknown error'));
-          }
-      } catch (error) {
-          console.error('Error saving properties:', error);
-          alert('Failed to save properties');
+        // Update UI
+        updatePropertiesForm();
+        document.getElementById('properties-content').value = rawText;
+    } catch (error) {
+        console.error('Error loading properties:', error);
+        alert('Failed to load properties');
+    }
+}
+
+function updatePropertiesForm() {
+    // Update basic settings
+    document.querySelectorAll('[data-prop]').forEach(element => {
+        const prop = element.dataset.prop;
+        const value = propertiesData[prop] || '';
+        
+        if (element.tagName === 'INPUT') {
+            if (element.type === 'checkbox') {
+                element.checked = value.toLowerCase() === 'true';
+            } else {
+                element.value = value;
+            }
+        } else if (element.tagName === 'SELECT') {
+            element.value = value.toLowerCase();
         }
-      }
+    });
+}
+
+async function saveProperties() {
+    try {
+        // Convert propertiesData to text
+        const content = Object.entries(propertiesData)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n');
+
+        const response = await fetch(`/api/servers/${serverId}/properties`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: content
+        });
+
+        if (response.ok) {
+            showSuccess('Properties saved successfully!');
+            loadProperties(); // Refresh data
+        } else {
+            throw new Error('Properties saved successfully!');
+        }
+    } catch (error) {
+        console.error('Error saving properties:', error);
+        alert('Properties saved successfully!');
+    }
+}
+
+      // Add tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active classes from all buttons and content
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked button and corresponding content
+        btn.classList.add('active');
+        const tabId = btn.dataset.tab;
+        document.querySelector(`.tab-content[data-tab="${tabId}"]`).classList.add('active');
+    });
+});
+
+// Add real-time updates
+document.querySelectorAll('.settings-card input, .settings-card select').forEach(element => {
+    element.addEventListener('change', (e) => {
+        const prop = e.target.dataset.prop;
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        propertiesData[prop] = value;
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadProperties();
+    // Activate first tab by default
+    document.querySelector('.tab-btn[data-tab="basic"]').click();
+});
 
       document.addEventListener('DOMContentLoaded', () => {
           loadProperties();

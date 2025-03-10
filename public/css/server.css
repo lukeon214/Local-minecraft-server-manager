@@ -16,7 +16,6 @@ body {
     background-color: var(--background);
     color: var(--text);
     margin: 0;
-    padding: 2rem;
     min-height: 100vh;
 }
 
@@ -351,4 +350,117 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+}
+
+.properties-editor {
+    background-color: var(--surface);
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.editor-tabs {
+    display: flex;
+    gap: 1rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.tab-btn.active {
+    background-color: var(--primary);
+    color: white;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.settings-card {
+    background-color: var(--background);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.setting-item {
+    margin: 1rem 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+.setting-item label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.setting-item input[type="text"] {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid #404040;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.setting-item select {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid #404040;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.editor-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.raw-editor {
+    margin-top: 1rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.raw-editor {
+    margin-top: 20px;
+}
+
+.raw-editor h3 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+#properties-content {
+    width: 100%;
+    height: 500px;
+    background-color: var(--console-bg);
+    color: var(--text);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #404040;
+    font-family: 'Courier New', monospace;
 }
