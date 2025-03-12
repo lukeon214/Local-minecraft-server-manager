@@ -13,7 +13,6 @@ const port = 3000;
 const SERVERS_DIR = path.join(__dirname, 'servers');
 const FORGE_TEMPLATE = path.join(__dirname, 'forge_template');
 
-// Database setup
 const db = new sqlite3.Database('./database/servers.db', (err) => {
   if (err) {
     console.error('Database error:', err.message);
@@ -21,7 +20,6 @@ const db = new sqlite3.Database('./database/servers.db', (err) => {
   }
 });
 
-// Database schema setup
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS servers (
     id TEXT PRIMARY KEY,
@@ -36,7 +34,6 @@ db.serialize(() => {
   )`);
 });
 
-// Server process manager
 class ServerManager {
   constructor() {
     this.processes = new Map();
@@ -104,11 +101,9 @@ class ServerManager {
 const serverManager = new ServerManager();
 const wss = new WebSocket.Server({ noServer: true });
 
-// Middleware
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Helper functions
 function sanitizeFolderName(name) {
   return name
     .toLowerCase()
@@ -161,7 +156,6 @@ async function resolveUUID(username) {
   return mojangData.uuid;
 }
 
-// GET existing OPs
 app.get('/api/servers/:id/ops', async (req, res) => {
   try {
       const server = await getServerById(req.params.id);
@@ -173,7 +167,6 @@ app.get('/api/servers/:id/ops', async (req, res) => {
   }
 });
 
-// DELETE OP
 app.delete('/api/servers/:id/ops/:uuid', async (req, res) => {
   try {
       const server = await getServerById(req.params.id);
@@ -212,7 +205,6 @@ app.post('/api/servers/:id/ops', async (req, res) => {
   }
 });
 
-// API Endpoints
 app.get('/api/servers', (req, res) => {
   db.all('SELECT * FROM servers', (err, rows) => {
     if (err) return res.status(500).json({ error: 'Failed to load servers' });
@@ -242,7 +234,7 @@ app.post('/api/servers', async (req, res) => {
       [serverId, name, path.basename(serverPath), '1.20.1', '47.2.0', port, serverPath],
       (err) => {
         if (err) {
-          console.error('Insert error:', err); // Log the error for debugging
+          console.error('Insert error:', err);
           return res.status(500).json({ error: 'Database error' });
         }
         res.json({ success: true, id: serverId });
@@ -273,7 +265,6 @@ app.delete('/api/servers/:id', async (req, res) => {
   }
 });
 
-// Server control endpoints
 app.post('/api/servers/:id/start', async (req, res) => {
   const server = await new Promise(resolve => 
     db.get('SELECT * FROM servers WHERE id = ?', [req.params.id], (err, row) => resolve(row)));
@@ -323,7 +314,7 @@ app.get('/api/servers/:id/properties', async (req, res) => {
   }
 });
 
-app.post('/api/servers/:id/properties', express.text(), async (req, res) => { // Add express.text() middleware
+app.post('/api/servers/:id/properties', express.text(), async (req, res) => {
   try {
     const server = await new Promise((resolve, reject) => {
       db.get('SELECT * FROM servers WHERE id = ?', [req.params.id], (err, row) => 
@@ -333,7 +324,7 @@ app.post('/api/servers/:id/properties', express.text(), async (req, res) => { //
     if (!server) return res.status(404).json({ error: 'Server not found' });
     
     const propertiesPath = path.join(server.path, 'server.properties');
-    await fs.writeFile(propertiesPath, req.body); // Use req.body directly
+    await fs.writeFile(propertiesPath, req.body);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -348,9 +339,8 @@ app.post('/api/servers/:id/whitelist', async (req, res) => {
       const whitelistPath = path.join(server.path, 'whitelist.json');
       const whitelist = await fs.readJson(whitelistPath).catch(() => []);
       
-      // Add new entry
       const newEntry = {
-          uuid: uuidv4(), // Note: Should use real UUID from Mojang API in production
+          uuid: uuidv4(),
           name: username
       };
       
@@ -370,7 +360,7 @@ app.post('/api/servers/:id/ops', async (req, res) => {
       const ops = await fs.readJson(opsPath).catch(() => []);
       
       const newOp = {
-          uuid: uuidv4(), // Placeholder - should get real UUID
+          uuid: uuidv4(),
           name: username,
           level: 4,
           bypassesPlayerLimit: false
@@ -392,7 +382,7 @@ app.post('/api/servers/:id/ban', async (req, res) => {
       const bans = await fs.readJson(bansPath).catch(() => []);
       
       const newBan = {
-          uuid: uuidv4(), // Placeholder
+          uuid: uuidv4(),
           name: username,
           created: new Date().toISOString(),
           source: "Server",
@@ -430,7 +420,6 @@ app.post('/api/servers/:id/ban-ip', async (req, res) => {
   }
 });
 
-// Add helper function at top with other helpers
 async function getServerById(serverId) {
   return new Promise((resolve, reject) => {
       db.get('SELECT * FROM servers WHERE id = ?', [serverId], (err, row) => {
@@ -441,7 +430,6 @@ async function getServerById(serverId) {
   });
 }
 
-// WebSocket setup
 const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${port}`);
 });
@@ -461,7 +449,6 @@ wss.on('connection', (ws, req) => {
   }));
 });
 
-// Error handling
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({ error: 'Internal server error' });
